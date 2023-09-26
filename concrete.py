@@ -1,93 +1,87 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.neural_network import MLPRegressor, MLPClassifier
-from sklearn.metrics import mean_squared_error, accuracy_score, classification_report, confusion_matrix, roc_curve, roc_auc_score
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import roc_curve, auc
+# from sklearn.inspection import plot_partial_dependence
 
 # Define the URL of the dataset and column names
-url = "https://archive.ics.uci.edu/ml/machine-learning-databases/concrete/compressive/Concrete_Data.xls"
+url_rf = "https://archive.ics.uci.edu/ml/machine-learning-databases/concrete/compressive/Concrete_Data.xls"
 column_names = ['cement', 'blast_furnace_slag', 'fly_ash', 'water', 'superplasticizer',
                 'coarse_aggregate', 'fine_aggregate', 'age', 'compressive_strength']
 
-# Load the dataset from the URL
-df = pd.read_excel(url, names=column_names)
+# Load the dataset
+data = pd.read_excel(url_rf, names=column_names)
 
-# Split the dataset into features (X) and target (y) for both problems
-X_regression = df.drop(['compressive_strength'], axis=1)
-y_regression = df['compressive_strength']
-y_classification = (y_regression >= y_regression.median()).astype(int)
+# Regression Task: Predicting 'compressive_strength' (Continuous)
+X_reg = data.drop(columns=['compressive_strength'])
+y_reg = data['compressive_strength']
+X_reg_train, X_reg_test, y_reg_train, y_reg_test = train_test_split(X_reg, y_reg, test_size=0.3, random_state=42)
 
-# Split the datasets into train and test sets
-X_reg_train, X_reg_test, y_reg_train, y_reg_test = train_test_split(
-    X_regression, y_regression, test_size=0.2, random_state=42)
-X_class_train, X_class_test, y_class_train, y_class_test = train_test_split(
-    X_regression, y_classification, test_size=0.2, random_state=42)
-
-# Standardize the data for both problems
-scaler_reg = StandardScaler()
-X_reg_train_scaled = scaler_reg.fit_transform(X_reg_train)
-X_reg_test_scaled = scaler_reg.transform(X_reg_test)
-
-scaler_class = StandardScaler()
-X_class_train_scaled = scaler_class.fit_transform(X_class_train)
-X_class_test_scaled = scaler_class.transform(X_class_test)
+# Classification Task: Binary Classification based on 'compressive_strength' (Discrete)
+threshold = 40  # Adjust the threshold as needed
+data['compressive_strength_label'] = (data['compressive_strength'] >= threshold).astype(int)
+X_clf = data.drop(columns=['compressive_strength', 'compressive_strength_label'])
+y_clf = data['compressive_strength_label']
+X_clf_train, X_clf_test, y_clf_train, y_clf_test = train_test_split(X_clf, y_clf, test_size=0.3, random_state=42)
 
 
-# ROC curve plotter
-def plot_roc_curve(fpr, tpr, auc):
-    plt.figure(figsize=(8, 6))
-    plt.plot(fpr, tpr, label='AUC = {:.3f}'.format(auc))
-    plt.plot([0, 1], [0, 1], 'k--')
-    plt.xlabel('False Positive Rate (FPR)')
-    plt.ylabel('True Positive Rate (TPR)')
-    plt.title('ROC Curve')
-    plt.legend()
-    plt.show()
-    # save in a file
-    plt.savefig('assets/roc_curve.png')
+# Support Vector Classifier (SVC) for classification
+svc_model = SVC(kernel='linear')
+svc_model.fit(X_clf_train, y_clf_train)
+svc_predictions = svc_model.predict(X_clf_test)
+svc_accuracy = accuracy_score(y_clf_test, svc_predictions)
+
+# Random Forest Classifier
+rf_clf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_clf_model.fit(X_clf_train, y_clf_train)
+rf_clf_predictions = rf_clf_model.predict(X_clf_test)
+rf_clf_accuracy = accuracy_score(y_clf_test, rf_clf_predictions)
+
+# # ROC Curve for Random Forest Classifier
+# rf_probs = rf_clf_model.predict_proba(X_clf_test)[:, 1]
+# fpr, tpr, thresholds = roc_curve(y_clf_test, rf_probs)
+# roc_auc = auc(fpr, tpr)
 
 
-# Scatter plot for regression
-def plot_scatter(y_reg_test, y_reg_pred):
-    plt.figure(figsize=(8, 6))
-    plt.scatter(y_reg_test, y_reg_pred, color='blue', alpha=0.5)
-    plt.plot([min(y_reg_test), max(y_reg_test)], [min(y_reg_test),
-                                                  max(y_reg_test)], linestyle='--', color='red', linewidth=2)
-    plt.xlabel('True Compressive Strength')
-    plt.ylabel('Predicted Compressive Strength')
-    plt.title('Regression Predictions vs True Values')
-    plt.show()
-    # save in a file
-    plt.savefig('assets/scatter_plot.png')
+# # Plot ROC Curve for Random Forest Classifier
+# plt.figure()
+# plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+# plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+# plt.title('Random Forest Classifier - ROC Curve')
+# plt.xlabel('False Positive Rate')
+# plt.ylabel('True Positive Rate')
+# plt.legend(loc='lower right')
+# plt.tight_layout()
+# plt.savefig('assets/random_forest_roc_curve.png')
 
 
-# Regression problem: Two-layer Neural Network with 1 hidden layer with 50 neurons
-reg = MLPRegressor(hidden_layer_sizes=(50, ), max_iter=1000,
-                   random_state=42, activation='tanh', solver='lbfgs')
-reg.fit(X_reg_train_scaled, y_reg_train)
-y_reg_pred = reg.predict(X_reg_test_scaled)
-mse = mean_squared_error(y_reg_test, y_reg_pred)
-print("Regression Mean Squared Error:", mse)
-print("For input the regression prediction is", y_reg_pred[0])
-# Scatter plot for regression
-plot_scatter(y_reg_test, y_reg_pred)
-print("\n")
+# # Partial Dependence Plot for Random Forest Classifier
+# feature_importance = rf_clf_model.feature_importances_
+# sorted_idx = np.argsort(feature_importance)[::-1]
+# plt.figure()
+# plt.bar(range(X_clf_train.shape[1]), feature_importance[sorted_idx])
+# plt.xticks(range(X_clf_train.shape[1]), X_clf_train.columns[sorted_idx], rotation=90)
+# plt.xlabel('Feature')
+# plt.ylabel('Feature Importance')
+# plt.title('Random Forest Classifier - Feature Importance')
+# plt.tight_layout()
+# plt.show()
+# plt.savefig('assets/random_forest_feature_importance.png')
 
-# Classification problem: Two-layer Neural Network with 1 hidden layer with 50 neurons
-clf = MLPClassifier(hidden_layer_sizes=(50, ), max_iter=1000,
-                    random_state=42, activation='tanh', solver='lbfgs')
-clf.fit(X_class_train_scaled, y_class_train)
-y_class_pred = clf.predict(X_class_test_scaled)
-accuracy = accuracy_score(y_class_test, y_class_pred)
-print("Classification Accuracy:", accuracy)
-print("Confusion Matrix:")
-print(confusion_matrix(y_class_test, y_class_pred))
-print(classification_report(y_class_test, y_class_pred))
-print("For input the classification is predicted as",
-      "good" if y_class_pred[0] else "bad")
-# ROC curve for classification
-fpr, tpr, thresholds = roc_curve(y_class_test, y_class_pred)
-auc = roc_auc_score(y_class_test, y_class_pred)
-plot_roc_curve(fpr, tpr, auc)
-print("\n")
+# Plot Decision Boundary for SVC
+plt.figure()
+plt.scatter(X_clf_train.iloc[:, 0], X_clf_train.iloc[:, 1], c=y_clf_train, alpha=0.8)
+plt.xlabel('Cement')
+plt.ylabel('Blast Furnace Slag')
+plt.title('SVC - Decision Boundary')
+plt.tight_layout()
+plt.show()
+plt.savefig('assets/svc_decision_boundary.png')
+
+
+print('SVM Classifier Accuracy: ', svc_accuracy)
+print('Random Forest Classifier Accuracy: ', rf_clf_accuracy)

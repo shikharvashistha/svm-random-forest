@@ -5,24 +5,20 @@
 
 ## Specification
 
-- This code has one hidden layer with 50 neurons and iterates 1000 times to find the regression mean squared error and classification accuracy in case of regression and classification respectively.
+- This code includes the classification using random forest and svm for the concrete dataset.
 
-- It also outputs regression prediction and class in case of regression and classification problem respectively.
+- This code includes the ROC curve for the random forest classifier, feature importance for the random forest classifier, and the decision boundary for the svm classifier.
 
-- It also outputs the ROC curve for classification problem.
+## Plots
 
-- It also outputs the scatter plot for regression problem.
+### Random Forest ROC Curve
+![alt text](assets/random_forest_roc_curve.png)
 
-**Note : Code takes time to run, therefore added the screenshot of output and plots**
+### Random Forest Feature Importance
+![alt text](assets/random_forest_feature_importance.png)
 
-
-## Scatter Plot for regression
-
-![alt text](assets/scatter_plot.png)
-
-## ROC Curve for classification
-
-![alt text](assets/roc_curve.png)
+### SVM Decision Boundary
+![alt text](assets/svc_decision_boundary.png)
 
 ## Screenshot of output
 
