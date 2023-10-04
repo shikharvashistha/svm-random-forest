@@ -20,6 +20,9 @@
 ### SVM Decision Boundary
 ![alt text](assets/svc_decision_boundary.png)
 
+### Naive Bayes ROC Curve
+![alt text](assets/naive_bayes_roc_classifier_curve.png)
+
 ## Screenshot of output
 
 ![alt text](assets/hw.png)

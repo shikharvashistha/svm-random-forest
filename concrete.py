@@ -6,6 +6,7 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import roc_curve, auc
+from sklearn.naive_bayes import GaussianNB
 # from sklearn.inspection import plot_partial_dependence
 
 # Define the URL of the dataset and column names
@@ -41,36 +42,87 @@ rf_clf_model.fit(X_clf_train, y_clf_train)
 rf_clf_predictions = rf_clf_model.predict(X_clf_test)
 rf_clf_accuracy = accuracy_score(y_clf_test, rf_clf_predictions)
 
-# # ROC Curve for Random Forest Classifier
-# rf_probs = rf_clf_model.predict_proba(X_clf_test)[:, 1]
-# fpr, tpr, thresholds = roc_curve(y_clf_test, rf_probs)
+# Naive Bayes Classifier
+nb_clf_model = GaussianNB()
+nb_clf_model.fit(X_clf_train, y_clf_train)
+nb_clf_predictions = nb_clf_model.predict(X_clf_test)
+nb_clf_accuracy = accuracy_score(y_clf_test, nb_clf_predictions)
+
+# # Naive Bayes Regression
+# nb_reg_model = GaussianNB()
+# nb_reg_model.fit(X_reg_train, y_reg_train)
+# nb_reg_predictions = nb_reg_model.predict(X_reg_test)
+# nb_reg_accuracy = accuracy_score(y_reg_test, nb_reg_predictions)
+
+
+# Curve for Naive Bayes Classifier
+nb_probs = nb_clf_model.predict_proba(X_clf_test)[:, 1]
+fpr, tpr, thresholds = roc_curve(y_clf_test, nb_probs)
+roc_auc = auc(fpr, tpr)
+
+
+# Plot ROC Curve for Naive Bayes Classifier
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.title('Naive Bayes Classifier - ROC Curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='lower right')
+plt.tight_layout()
+plt.savefig('assets/naive_bayes_roc_classifier_curve.png')
+
+
+# # Curve for Naive Bayes Regression
+# nb_probs = nb_reg_model.predict_proba(X_reg_test)[:, 1]
+# fpr, tpr, thresholds = roc_curve(y_reg_test, nb_probs)
 # roc_auc = auc(fpr, tpr)
 
 
-# # Plot ROC Curve for Random Forest Classifier
+# # Plot ROC Curve for Naive Bayes Regression
 # plt.figure()
 # plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
 # plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-# plt.title('Random Forest Classifier - ROC Curve')
+# plt.title('Naive Bayes Regression - ROC Curve')
 # plt.xlabel('False Positive Rate')
 # plt.ylabel('True Positive Rate')
 # plt.legend(loc='lower right')
 # plt.tight_layout()
-# plt.savefig('assets/random_forest_roc_curve.png')
+# plt.savefig('assets/naive_bayes_roc_regression_curve.png')
 
 
-# # Partial Dependence Plot for Random Forest Classifier
-# feature_importance = rf_clf_model.feature_importances_
-# sorted_idx = np.argsort(feature_importance)[::-1]
-# plt.figure()
-# plt.bar(range(X_clf_train.shape[1]), feature_importance[sorted_idx])
-# plt.xticks(range(X_clf_train.shape[1]), X_clf_train.columns[sorted_idx], rotation=90)
-# plt.xlabel('Feature')
-# plt.ylabel('Feature Importance')
-# plt.title('Random Forest Classifier - Feature Importance')
-# plt.tight_layout()
-# plt.show()
-# plt.savefig('assets/random_forest_feature_importance.png')
+
+
+# ROC Curve for Random Forest Classifier
+rf_probs = rf_clf_model.predict_proba(X_clf_test)[:, 1]
+fpr, tpr, thresholds = roc_curve(y_clf_test, rf_probs)
+roc_auc = auc(fpr, tpr)
+
+
+# Plot ROC Curve for Random Forest Classifier
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.title('Random Forest Classifier - ROC Curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='lower right')
+plt.tight_layout()
+plt.savefig('assets/random_forest_roc_curve.png')
+
+
+# Partial Dependence Plot for Random Forest Classifier
+feature_importance = rf_clf_model.feature_importances_
+sorted_idx = np.argsort(feature_importance)[::-1]
+plt.figure()
+plt.bar(range(X_clf_train.shape[1]), feature_importance[sorted_idx])
+plt.xticks(range(X_clf_train.shape[1]), X_clf_train.columns[sorted_idx], rotation=90)
+plt.xlabel('Feature')
+plt.ylabel('Feature Importance')
+plt.title('Random Forest Classifier - Feature Importance')
+plt.tight_layout()
+plt.show()
+plt.savefig('assets/random_forest_feature_importance.png')
 
 # Plot Decision Boundary for SVC
 plt.figure()
@@ -85,3 +137,4 @@ plt.savefig('assets/svc_decision_boundary.png')
 
 print('SVM Classifier Accuracy: ', svc_accuracy)
 print('Random Forest Classifier Accuracy: ', rf_clf_accuracy)
+print('Naive Bayes Classifier Accuracy: ', nb_clf_accuracy)
